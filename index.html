@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Seven Summits</title>
+<!-- model-viewer 3.5.0, bundled locally so the site works without internet -->
+<script type="module" src="lib/model-viewer.min.js"></script>
+<style>
+  @font-face { font-family: "Roboto Mono"; src: url("lib/roboto-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0 auto;
+    max-width: 1240px;
+    padding: 48px clamp(24px, 6vw, 80px);
+    background: #00236f;
+    color: #e8edf7;
+    font-family: "Roboto Mono", monospace;
+    line-height: 1.5;
+  }
+  a { color: inherit; }
+
+  .top { position: relative; text-align: center; }
+  h1 { margin: 0; font-size: 28px; font-weight: normal; }
+  .byline { margin: 6px 0 0; font-size: 14px; opacity: .7; }
+  .byline + .byline { margin-top: 2px; font-size: 13px; opacity: .7; }
+  .top a { position: absolute; right: 0; top: 8px; font-size: 15px; }
+
+  /* mountains */
+  .peak {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-top: 64px;
+  }
+  .peak h2 { margin: 0; font-size: 20px; font-weight: normal; }
+  .height { margin: 4px 0 0; font-size: 16px; color: #ffffff; }
+  .stage { position: relative; height: min(88vh, 860px); grid-column: 1; }
+  model-viewer { width: 100%; height: 100%; background: transparent; }
+  .missing { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; opacity: .5; font-size: 14px; }
+  .stage.is-missing .missing { display: flex; }
+
+
+  /* comparison */
+  #compare { margin-top: 56px; }
+  #compare a { text-decoration: none; display: block; }
+  #compare a:hover polyline { stroke: #ffd23f; }
+  #compare a:hover { color: #ffd23f; }
+  .row { display: flex; align-items: flex-end; gap: 2%; border-bottom: 1px solid rgba(232,237,247,.5); }
+  .row div { flex: 1; text-align: center; font-size: 12px; }
+  .row svg { display: block; width: 100%; }
+  .row polyline { fill: none; stroke: #e8edf7; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+  .labels { display: flex; gap: 2%; margin-top: 10px; }
+  .labels div { flex: 1; text-align: center; font-size: 12px; }
+  .labels span { color: inherit; }
+
+  /* process */
+  #process { margin-top: 96px; max-width: 760px; }
+  #process ul { list-style-type: "- "; }
+  #process h2 { font-size: 20px; font-weight: normal; }
+  #process li { margin-bottom: 10px; }
+  #process ul { margin-top: 6px; }
+
+  @media (max-width: 760px) {
+    .peak { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>The Seven Summits</h1>
+  <p class="byline">by Riddhi Kasralikar</p>
+  <p class="byline">Models shown at 1.7× vertical scale</p>
+  <a href="#process">The Process</a>
+</div>
+
+<section id="compare">
+  <div class="row" id="row"></div>
+  <div class="labels" id="labels"></div>
+</section>
+
+<main id="peaks"></main>
+
+<section id="process">
+  <h2>The Process</h2>
+  <ol>
+    <li>Installed the BlenderGIS add-on (<a href="https://github.com/domlysz/BlenderGIS" target="_blank" rel="noopener">github.com/domlysz/BlenderGIS</a>). In Blender: Edit → Preferences → Add-ons → Install from Disk, then enabled it.</li>
+    <li>Got a free API key from OpenTopography (<a href="https://portal.opentopography.org/requestService?service=api" target="_blank" rel="noopener">opentopography.org</a>) and added it to BlenderGIS to access elevation data.</li>
+    <li>Loaded a basemap: GIS → Web geodata → Basemap, searched each mountain with G, zoomed to the area, and pressed E to export the satellite imagery as a plane.</li>
+    <li>Added elevation: GIS → Web geodata → Get elevation, using Copernicus GLO-30 (30 m) data. The default SRTM dataset only covers 60°N to 56°S, so it has no data for Denali or Vinson.</li>
+    <li>Corrected Web Mercator distortion by scaling X and Y by cos(latitude), so every tile shows true ground distance. The map stretches land sideways away from the equator: about 2.2× at Denali and 5× at Vinson.</li>
+    <li>Set the Z scale to 1.7 (vertical exaggeration), the same for all seven so they stay comparable.</li>
+    <li>Cropped each mountain to a 17 × 17 km square centered on the summit:
+      <ul>
+        <li>Shift + A → Mesh → Cube, sized 17000 × 17000 × 30000</li>
+        <li>Added a Boolean modifier to the terrain: Intersect, Exact solver, Hole Tolerant</li>
+        <li>Applied it, deleted the cube, and saved</li>
+      </ul>
+    </li>
+    <li>Packed resources (File → External Data → Pack Resources), applied modifiers and transforms, and exported each mountain as a .glb file for the web.</li>
+  </ol>
+</section>
+
+<script>
+/* EDIT YOUR DATA HERE */
+const PEAKS = [
+  { id: "everest",     name: "Mount Everest",     short: "Everest",     place: "Nepal, Asia",          m: 8849 },
+  { id: "aconcagua",   name: "Aconcagua",         short: "Aconcagua",   place: "Argentina, South America", m: 6961 },
+  { id: "denali",      name: "Denali",            short: "Denali",      place: "USA, North America", m: 6190 },
+  { id: "kilimanjaro", name: "Kilimanjaro",       short: "Kilimanjaro", place: "Tanzania, Africa",        m: 5895 },
+  { id: "elbrus",      name: "Mount Elbrus",      short: "Elbrus",      place: "Russia, Europe",        m: 5642 },
+  { id: "vinson",      name: "Vinson Massif",     short: "Vinson",      place: "Antarctica",    m: 4892 },
+  { id: "carstensz",   name: "Carstensz Pyramid", short: "Carstensz",   place: "Indonesia, Oceania",       m: 4884 },
+];
+
+const fmt = n => n.toLocaleString("en-US");
+const ft = m => Math.round(m * 3.28084);
+const main = document.getElementById("peaks");
+
+PEAKS.forEach(p => {
+  const s = document.createElement("section");
+  s.className = "peak";
+  s.id = p.id;
+  s.innerHTML = `
+    <div>
+      <h2>${p.name}, ${p.place}</h2>
+      <p class="height">${fmt(p.m)} m / ${fmt(ft(p.m))} ft</p>
+    </div>
+    <div class="stage">
+      <model-viewer src="models/${p.id}.glb" alt="3D model of ${p.name}"
+        camera-controls disable-zoom disable-tap interaction-prompt="none" touch-action="pan-y" 
+        camera-orbit="180deg 70deg 60%" min-camera-orbit="auto 5deg 100m" max-camera-orbit="auto 88deg auto"
+        interpolation-decay="90" orbit-sensitivity="0.8"
+        shadow-intensity="1" exposure="0.6" loading="lazy">
+      </model-viewer>
+      <div class="missing">models/${p.id}.glb not found</div>
+    </div>`;
+  main.appendChild(s);
+
+  const mv = s.querySelector("model-viewer");
+  mv.addEventListener("error", () => s.querySelector(".stage").classList.add("is-missing"));
+
+  // Zoom with pinch (trackpad) or Ctrl/Cmd + scroll, like Blender's zoom,
+  // while normal scrolling still moves down the page
+  mv.addEventListener("wheel", e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    const o = mv.getCameraOrbit();
+    const r = Math.min(Math.max(o.radius * Math.exp(e.deltaY * 0.01), 2000), 80000);
+    mv.cameraOrbit = `${o.theta}rad ${o.phi}rad ${r}m`;
+  }, { passive: false });
+
+});
+
+// minimal size comparison, drawn at true relative height
+const maxM = Math.max(...PEAKS.map(p => p.m));
+PEAKS.forEach(p => {
+  const h = Math.round(200 * p.m / maxM);
+  document.getElementById("row").insertAdjacentHTML("beforeend",
+    `<div><a href="#${p.id}" aria-label="Jump to ${p.name}"><svg viewBox="0 0 100 ${h}" preserveAspectRatio="none" style="height:${h}px"><polyline points="0,${h} 50,0 100,${h}"/></svg></a></div>`);
+  document.getElementById("labels").insertAdjacentHTML("beforeend",
+    `<div><a href="#${p.id}">${p.short}<br><span>${fmt(p.m)} m<br>${fmt(ft(p.m))} ft</span></a></div>`);
+});
+</script>
+</body>
+</html>
