@@ -18,4 +18,6 @@ PROJECT STRUCTURE
   models/        one .glb 3D model per mountain
 
   To change any mountain names, locations or heights, edit the PEAKS list near the bottom of index.html.
+
+  i love the appearance of the readme in a code block
 ```
